@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <title>Vortex Auth - Clerk Edition</title>
+    
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600&f[]=satoshi@500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1180d4", "neo-primary": "#2A5C82", "neo-base": "#E0E5EC", "neo-text": "#1A1C23", "neo-muted": "#7A8B99", "success": "#2E7D32"
+                    },
+                    fontFamily: {
+                        "sans": ["Plus Jakarta Sans", "sans-serif"], "heading": ["Clash Display", "sans-serif"], "body": ["Satoshi", "sans-serif"],
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "card": "24px", "element": "12px" },
+                    boxShadow: {
+                        "raised": "9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5)",
+                        "sunken": "inset 6px 6px 10px 0 rgba(163,177,198, 0.7), inset -6px -6px 10px 0 rgba(255,255,255, 0.8)",
+                    }
+                },
+            },
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
+
+    <style>
+        :root { --unit: clamp(40px, 7vh, 56px); }
+        body {
+            background: linear-gradient(135deg, #EAEEF3 0%, #D8DFE7 100%);
+            background-attachment: fixed;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .glass-panel {
+            background: rgba(224, 229, 236, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1.5px solid rgba(255, 255, 255, 0.65);
+            max-height: 96vh;
+        }
+        .fluid-h { height: var(--unit); }
+        .fluid-gap { gap: clamp(8px, 1.5vh, 16px); }
+        .fluid-margin { margin-bottom: clamp(12px, 2.5vh, 24px); }
+        .neumorphic-input:focus {
+            box-shadow: inset 6px 6px 10px 0 rgba(163,177,198, 0.7), inset -6px -6px 10px 0 rgba(255,255,255, 0.8), 0 0 0 2px #2A5C82;
+            outline: none;
+        }
+        .btn-active:active {
+            box-shadow: inset 6px 6px 10px 0 rgba(163,177,198, 0.7), inset -6px -6px 10px 0 rgba(255,255,255, 0.8);
+            transform: translateY(1px);
+        }
+        .view-container { display: none; width: 100%; flex-direction: column; align-items: center; }
+        .view-container.active { display: flex; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body class="p-4">
+
+    <div class="w-full max-w-[440px] glass-panel rounded-card p-6 md:p-10 flex flex-col items-center justify-center">
+
+        <main id="view-register" class="view-container active">
+            <div class="w-10 h-10 rounded-full bg-neo-base shadow-raised flex items-center justify-center mb-4">
+                <span class="material-symbols-outlined text-neo-primary text-xl">person_add</span>
+            </div>
+            <div class="text-center fluid-margin">
+                <h1 class="font-heading text-2xl font-semibold text-neo-text">Register</h1>
+                <p class="text-neo-muted text-xs">Create your tactile account</p>
+            </div>
+            
+            <form class="w-full flex flex-col fluid-gap" onsubmit="handleSignUp(event)">
+                <button id="reg-google-btn" class="fluid-h w-full bg-neo-base shadow-raised rounded-element font-heading text-neo-text text-sm transition-all btn-active flex items-center justify-center gap-2" type="button" onclick="loginGoogle()">
+                    <svg viewBox="0 0 48 48" width="20" height="20"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                    Google
+                </button>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <input id="reg-fname" class="fluid-h w-full bg-neo-base shadow-sunken rounded-element px-4 text-sm border-none focus:ring-0 neumorphic-input" placeholder="First" type="text" />
+                    <input id="reg-lname" class="fluid-h w-full bg-neo-base shadow-sunken rounded-element px-4 text-sm border-none focus:ring-0 neumorphic-input" placeholder="Last" type="text" />
+                </div>
+
+                <input id="reg-email" class="fluid-h w-full bg-neo-base shadow-sunken rounded-element px-4 text-sm border-none focus:ring-0 neumorphic-input" placeholder="Email" type="email" />
+                <input id="reg-pass" class="fluid-h w-full bg-neo-base shadow-sunken rounded-element px-4 text-sm border-none focus:ring-0 neumorphic-input" placeholder="Password" type="password" />
+                
+                <button id="reg-submit" class="fluid-h w-full bg-neo-base shadow-raised rounded-element font-heading text-neo-primary text-sm font-bold transition-all btn-active mt-2" type="submit">Send OTP</button>
+                
+                <p class="text-center text-[11px] text-neo-muted">
+                    Have an account? <span onclick="nav('login')" class="text-neo-primary font-bold cursor-pointer">Sign In</span>
+                </p>
+            </form>
+        </main>
+
+        <main id="view-verify" class="view-container">
+            <div class="w-10 h-10 rounded-full bg-neo-base shadow-raised flex items-center justify-center mb-4 text-success">
+                <span class="material-symbols-outlined text-xl">verified_user</span>
+            </div>
+            <div class="text-center fluid-margin">
+                <h1 class="font-heading text-2xl font-semibold text-neo-text">Verify Email</h1>
+                <p class="text-neo-muted text-xs">Enter the 6-digit code sent to your mail</p>
+            </div>
+            <div class="w-full flex flex-col fluid-gap">
+                <input id="verify-code" class="fluid-h w-full bg-neo-base shadow-sunken rounded-element px-4 text-center text-lg font-bold tracking-[1em] border-none focus:ring-0 neumorphic-input" placeholder="000000" type="text" maxlength="6" />
+                <button onclick="handleVerification(event)" class="fluid-h w-full bg-neo-base shadow-raised rounded-element font-heading text-primary text-sm font-bold btn-active mt-4">Verify & Join</button>
+            </div>
+        </main>
+
+        <main id="view-login" class="view-container">
+            <div class="w-10 h-10 rounded-full bg-neo-base shadow-raised flex items-center justify-center mb-4 text-primary">
+                <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">lock</span>
+            </div>
+            <div class="text-center fluid-margin">
+                <h1 class="font-heading text-2xl font-semibold text-neo-text">Welcome Back</h1>
+                <p class="text-neo-muted text-xs">Sign in to continue</p>
+            </div>
+            
+            <form class="w-full flex flex-col fluid-gap" onsubmit="handleSignIn(event)">
+                <button class="fluid-h w-full bg-neo-base shadow-raised rounded-element font-heading text-neo-text text-sm transition-all btn-active flex items-center justify-center gap-2" type="button" onclick="loginGoogle()">
+                    Google
+                </button>
+                
+                <input id="login-email" class="fluid-h w-full bg-neo-base shadow-sunken rounded-element px-4 text-sm border-none focus:ring-0 neumorphic-input" placeholder="Email" type="email" />
+                <input id="login-pass" class="fluid-h w-full bg-neo-base shadow-sunken rounded-element px-4 text-sm border-none focus:ring-0 neumorphic-input tracking-widest" placeholder="••••••••" type="password" />
+                
+                <div class="flex justify-end">
+                    <span onclick="nav('recovery')" class="text-[11px] font-bold text-neo-muted hover:text-primary cursor-pointer">Forgot password?</span>
+                </div>
+                
+                <button id="login-submit" class="fluid-h w-full bg-neo-base shadow-raised rounded-element font-heading text-primary text-sm font-bold transition-all btn-active mt-2">Sign In</button>
+                
+                <p class="text-center text-[11px] text-neo-muted">
+                    No account? <span onclick="nav('register')" class="text-primary font-bold cursor-pointer">Create one</span>
+                </p>
+            </form>
+        </main>
+
+        <main id="view-recovery" class="view-container">
+            <button onclick="nav('login')" class="fluid-h w-full bg-neo-base shadow-raised rounded-element mb-6 flex items-center justify-center text-primary font-bold gap-2 btn-active">
+                <span class="material-symbols-outlined">arrow_back</span> Back
+            </button>
+            <div class="text-center fluid-margin">
+                <h1 class="font-heading text-2xl font-semibold text-neo-text">Recovery</h1>
+                <p class="text-neo-muted text-xs px-4">Enter email for reset link.</p>
+            </div>
+            <div class="w-full flex flex-col fluid-gap">
+                <input id="rec-email" class="fluid-h w-full bg-neo-base shadow-sunken rounded-element px-4 text-sm border-none focus:ring-0 neumorphic-input" placeholder="Enter Email" type="email" />
+                <button onclick="handleRecovery(event)" class="fluid-h w-full bg-neo-base shadow-raised rounded-element font-heading text-primary text-sm font-bold btn-active mt-4">Send Reset Link</button>
+            </div>
+        </main>
+
+    </div>
+
+    <script async crossorigin="anonymous" data-clerk-publishable-key="pk_test_aGVscGVkLXNreWxhcmstMTkuY2xlcmsuYWNjb3VudHMuZGV2JA" src="https://helped-skylark-19.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js" type="text/javascript"></script>
+
+    <script>
+        window.nav = (v) => {
+            document.querySelectorAll('.view-container').forEach(c => c.classList.remove('active'));
+            document.getElementById(`view-${v}`).classList.add('active');
+        };
+
+        window.addEventListener('load', async function () {
+            await Clerk.load();
+            
+            // Check if user is already logged in
+            if (Clerk.user) {
+                window.location.href = "/dashboard"; // আপনার ড্যাশবোর্ড ইউআরএল দিন
+            }
+        });
+
+        // 1. Handle Sign Up with Email OTP
+        async function handleSignUp(e) {
+            e.preventDefault();
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-pass').value;
+            const firstName = document.getElementById('reg-fname').value;
+            const lastName = document.getElementById('reg-lname').value;
+
+            try {
+                await Clerk.signUp.create({
+                    emailAddress: email,
+                    password: password,
+                    firstName: firstName,
+                    lastName: lastName
+                });
+                await Clerk.signUp.prepareEmailAddressVerification();
+                nav('verify');
+                alert("OTP Sent to your email!");
+            } catch (err) {
+                alert("Error: " + err.errors[0].message);
+            }
+        }
+
+        // 2. Handle OTP Verification
+        async function handleVerification(e) {
+            const code = document.getElementById('verify-code').value;
+            try {
+                const completeSignUp = await Clerk.signUp.attemptEmailAddressVerification({ code });
+                if (completeSignUp.status === 'complete') {
+                    await Clerk.setActive({ session: completeSignUp.createdSessionId });
+                    alert("Account Deployed Successfully!");
+                    window.location.href = "/dashboard";
+                }
+            } catch (err) {
+                alert("Invalid OTP: " + err.errors[0].message);
+            }
+        }
+
+        // 3. Handle Regular Sign In
+        async function handleSignIn(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-pass').value;
+
+            try {
+                const signInAttempt = await Clerk.signIn.create({
+                    identifier: email,
+                    password: password,
+                });
+                if (signInAttempt.status === 'complete') {
+                    await Clerk.setActive({ session: signInAttempt.createdSessionId });
+                    window.location.href = "/dashboard";
+                }
+            } catch (err) {
+                alert("Login Failed: " + err.errors[0].message);
+            }
+        }
+
+        // 4. Handle Google Login (Social)
+        function loginGoogle() {
+            Clerk.authenticateWithRedirect({
+                strategy: "oauth_google",
+                redirectUrl: "/dashboard",
+                redirectUrlComplete: "/dashboard"
+            });
+        }
+
+        // 5. Handle Password Recovery
+        async function handleRecovery(e) {
+            const email = document.getElementById('rec-email').value;
+            try {
+                await Clerk.signIn.create({
+                    strategy: "reset_password_email_code",
+                    identifier: email,
+                });
+                alert("Recovery code sent to your email!");
+            } catch (err) {
+                alert("Error: " + err.errors[0].message);
+            }
+        }
+    </script>
+</body>
+</html>
+<!--  -->
